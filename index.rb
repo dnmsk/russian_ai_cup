@@ -18,93 +18,53 @@ module Strategies
       @my_world.reinitialize(me, world, game, move)
 
       return if me.remaining_action_cooldown_ticks > 0
-      action = linked_action(@my_world) ||
-        continious_action(@my_world) ||
-        delayed_action(@my_world) ||
-        initial_actions(@my_world)
 
-      return if action.nil? 
+      action = continious_action ||
+        initial_actions
+      action.() if action
 
-      result = action.(@my_world)
-      return if result.nil?
-
-      if result[:state] != Strategies::ActionStateType::ENDED
-        add_delayed_action(result)
-      else
-        @my_world.ended_task.push(result[:name])
-      end
-      #if move.action
-      #  ap move
-      #end
-      if result[:next_action]
-        next_action = Strategies::Actions::ActionWrapper.new(
-          AVAILABLE_ACTIONS[result[:next_action]],
-          result
-        )
-        next_action[:ticks] = 0
-        add_delayed_action(next_action)
-      end
+      was_move = @my_world.move_processor.run_delayed(move) ||
+        @my_world.move_processor.(move)
+#      if was_move
+#        ap world.tick_index
+#        ap move 
+#      end
     end
 
     private
 
-    def linked_action(my_world)
-      return if my_world.actions.empty?
-      action = my_world.actions.first
-      my_world.actions.delete(action)
-#      ap action
-      action
-    end
-
-    def continious_action(my_world)
+    def continious_action
       @continious_action ||= [
-        Strategies::Actions::DefenceNuclearStrike.new,
-        #Strategies::Actions::AttackNuclearStrike.new,
+        Strategies::Actions::DefenceNuclearStrike.new(@my_world),
+        #Strategies::Actions::AttackNuclearStrike.new(my_world),
         #Strategies::Actions::InitialDefence.new(my_world, Strategies::SquadType::AIR),
-        Strategies::Actions::InitialDefence.new(my_world, Strategies::SquadType::FIGHTER),
-        Strategies::Actions::InitialDefence.new(my_world, Strategies::SquadType::HELICOPTER),
+        Strategies::Actions::InitialDefence.new(@my_world, Strategies::SquadType::FIGHTER),
+        Strategies::Actions::InitialDefence.new(@my_world, Strategies::SquadType::HELICOPTER),
         #Strategies::Actions::InitialDefence.new(my_world, Strategies::SquadType::AIR),
-        
       ]
 
-      @continious_action.find { |v| v.need_run?(my_world) }
+      @continious_action.find { |v| v.need_run?(@my_world) }
     end
 
-    def init_continious_action my_world
-      squads = Strategies::SquadBuilder.new.get(my_world)
+    def init_continious_action 
+      squads = Strategies::SquadBuilder.new.get(@my_world)
       [
         #Strategies::Actions::AttackNuclearStrike,
         #Strategies::Actions::DefenceNuclearStrike,
         Strategies::Actions::Attack,
-      ].each {|s| @continious_action.push(s.new(squads))}
+      ].each {|s| @continious_action.push(s.new(@my_world, squads))}
     end
 
-    def initial_actions(my_world)
+    def initial_actions
       @initial_actions ||= Strategies::Initial.new(@my_world).get(
-        ->() {init_continious_action(my_world) }
+        ->() {
+          init_continious_action }
       )
       action = @initial_actions.first
-      if action && action.need_run?(my_world)
+      if action && action.need_run?(@my_world)
         @initial_actions.delete_at(0)
         action
       end
-    end
-
-    def add_delayed_action action
-      @delayed_actions << action
-    end
-
-    def delayed_action my_world
-      @delayed_actions ||= []
-      @delayed_actions.each { |v| v[:ticks] -= 1 }
-      actions = @delayed_actions.select do |v|
-        v[:ticks] <= 0 && v.need_run?(my_world)
-      end
-
-      return if actions.empty?
-      action = actions.sort_by{ |v| v[:ticks] }.first
-      @delayed_actions.delete action
-      action
     end
   end
 end

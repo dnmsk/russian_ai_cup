@@ -1,4 +1,5 @@
 require './model/action_type'
+require './move_processor'
 require './vehicle_map'
 
 module Strategies
@@ -8,6 +9,7 @@ module Strategies
       @vehicle_map = VehicleMap.new(me, world)
       @ended_task = []
       @actions = []
+      @move_processor = Strategies::MoveProcessor.new(self)
     end
 
     def reinitialize me, world, game, move
@@ -40,6 +42,10 @@ module Strategies
       @ended_task
     end
 
+    def move_processor
+      @move_processor
+    end
+
     def add_action action_base
       @actions.push(action_base)
     end
@@ -51,26 +57,6 @@ module Strategies
 
     def actions
       @actions
-    end
-
-    def apply_to_move data, defaults
-      defaults.each { |k, v| @move.send("#{k}=".to_s, data[k] || v) }
-      if @move.action == ActionType::CLEAR_AND_SELECT
-        @last_selection = {
-          group: @move.group,
-          left: @move.left,
-          top: @move.top,
-          right: @move.right,
-          bottom: @move.bottom,
-          vehicle_type: @move.vehicle_type,
-          facility_id: @move.facility_id,
-          vehicle_id: @move.vehicle_id
-        }
-      end
-    end
-
-    def last_selection
-      @last_selection
     end
 
 #      {

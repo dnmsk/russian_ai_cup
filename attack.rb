@@ -1,13 +1,13 @@
 module Strategies::Actions
   class Attack
-    def initialize squads
-      @squads = squads
+    def initialize my_world, squads
+      @my_world, @squads = my_world, squads
     end
 
-    def call(my_world, params = {})
-      enemies = enemies_by_distance(my_world)
+    def call(params = {})
+      enemies = enemies_by_distance
       enemy = enemies.first[1]
-      if attack?(my_world)
+      if attack?
         @squads[Strategies::SquadType::AIR].attack_vehicles(enemy)
       else
         @squads[Strategies::SquadType::AIR].
@@ -16,10 +16,10 @@ module Strategies::Actions
       @squads[Strategies::SquadType::FIGHTERS].attack_vehicles(enemy)
     end
 
-    def need_run?(my_world, params = {})\
+    def need_run?(params = {})
       @call_id ||= 0
-      @need_run ||= my_world.ended_task.include?(:initial_complete)
-      @need_run && (@call_id += 1) % 100 == 0
+      @need_run ||= @my_world.ended_task.include?(:initial_complete)
+      @need_run && (@call_id += 1) % 150 == 0
     end
 
     private
@@ -27,8 +27,8 @@ module Strategies::Actions
     def air_follow_ground
     end
 
-    def attack? my_world
-      enemies = enemy_groups my_world
+    def attack?
+      enemies = enemy_groups
       my_position = my_vehicles_position
 #      ap my_position
 #      ap enemies.map{|a| "#{a[0]} #{a[1].count}"}
@@ -38,8 +38,8 @@ module Strategies::Actions
       Strategies::Point.distance_to_rect(enemies_arr[0], my_position.x, my_position.y) < 40
     end
 
-    def enemies_by_distance my_world
-      enemies = enemy_groups my_world
+    def enemies_by_distance
+      enemies = enemy_groups
       my_position = my_vehicles_position
       enemies_arr = enemies.
         sort{|e| Strategies::Point.distance_to_rect(e[0], my_position.x, my_position.y)}
@@ -49,9 +49,9 @@ module Strategies::Actions
       @squads[Strategies::SquadType::FIGHTERS].vehicles.position
     end
 
-    def enemy_groups my_world
+    def enemy_groups
       point_class = Strategies::Point
-      enemies = my_world.vehicle_map.enemy_vehicle.vehicles
+      enemies = @my_world.vehicle_map.enemy_vehicle.vehicles
       groups = []
       enemies.sort{|v|v[:x]}.sort{|v|v[:y]}.each do |v|
         found = false
