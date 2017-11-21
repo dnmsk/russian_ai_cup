@@ -11,7 +11,7 @@ module Strategies::Actions
         { name: :select, act: ->(rectangle) {
             [Strategies::Point.new(strike_point.x-100, strike_point.y-100),
               Strategies::Point.new(strike_point.x+100, strike_point.y+100)] } },
-        { name: :scale, act: ->(p) { {factor: 20, point: strike_point } }, ticks: -99999999, delayed: :vehicle_stops},
+        { name: :scale, act: ->(p) { {factor: 10, point: strike_point } }, ticks: -99999999, delayed: :vehicle_stops},
         { name: :wait, act: ->() { my_world.world.opponent_player.remaining_action_cooldown_ticks <= 0 }, ticks: -99999999 },
         { name: :scale, act: ->(p) { {factor: 0.1, point: strike_point } }, ticks: -99999999},
       ]

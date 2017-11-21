@@ -5,8 +5,8 @@ module Strategies::Actions
     RANGE_FOR_DEFENCE = 550
 
     PRIORITIES = {
-      VehicleType::FIGHTER => 0,
-      VehicleType::HELICOPTER => 1,
+      VehicleType::FIGHTER => 1,
+      VehicleType::HELICOPTER => 0,
       VehicleType::IFV => 2,
       VehicleType::TANK => 3,
       VehicleType::ARRV => 4,

@@ -10,14 +10,16 @@ module Strategies::Actions
       if attack?(my_world)
         @squads[Strategies::SquadType::AIR].attack_vehicles(enemy)
       else
-        @squads[Strategies::SquadType::AIR].move_to_point(@squads[Strategies::SquadType::FIGHTERS].forces.position)
+        @squads[Strategies::SquadType::AIR].
+          move_to_point(@squads[Strategies::SquadType::FIGHTERS].vehicles.position)
       end
       @squads[Strategies::SquadType::FIGHTERS].attack_vehicles(enemy)
     end
 
-    def need_run?(my_world, params = {})
+    def need_run?(my_world, params = {})\
+      @call_id ||= 0
       @need_run ||= my_world.ended_task.include?(:initial_complete)
-      @need_run && !@squads.select{|(k, v)| @squads[k].in_progress?}.any?
+      @need_run && (@call_id += 1) % 100 == 0
     end
 
     private
@@ -27,7 +29,7 @@ module Strategies::Actions
 
     def attack? my_world
       enemies = enemy_groups my_world
-      my_position = my_forces_position
+      my_position = my_vehicles_position
 #      ap my_position
 #      ap enemies.map{|a| "#{a[0]} #{a[1].count}"}
       enemies_arr = enemies.
@@ -38,13 +40,13 @@ module Strategies::Actions
 
     def enemies_by_distance my_world
       enemies = enemy_groups my_world
-      my_position = my_forces_position
+      my_position = my_vehicles_position
       enemies_arr = enemies.
         sort{|e| Strategies::Point.distance_to_rect(e[0], my_position.x, my_position.y)}
     end
 
-    def my_forces_position
-      @squads[Strategies::SquadType::FIGHTERS].forces.position
+    def my_vehicles_position
+      @squads[Strategies::SquadType::FIGHTERS].vehicles.position
     end
 
     def enemy_groups my_world
