@@ -55,9 +55,9 @@ module Strategies
       @call_id ||= 0
 
       if (@call_id += 1) % 3 == 0
-        actions.insert(1, { name: :scale, act: ->(point) { {factor: 0.1} } })
-        actions.insert(1, { name: :rotate, act: ->() { 0.4 }, delayed: :vehicle_stops })
-        actions.insert(1, { name: :scale, act: ->(point) { {factor: 0.1} }, delayed: :vehicle_stops })
+        #actions.insert(1, { name: :rotate, act: ->() { Math::PI/2 } })
+        actions.insert(2, { name: :scale, act: ->(vehicles) { {factor: 0.1 } } })
+        actions.insert(2, { name: :scale, act: ->(vehicles) { {factor: 0.1 } }, delayed: :vehicle_stops })
       end
 
       Strategies::Actions::Base.
@@ -79,8 +79,8 @@ module Strategies
       my_rectangle = mine.rectangle
       my_position = mine.position
       Strategies::Point.new(
-        enemy_rectangle[0].x + (my_rectangle[1].x - my_rectangle[0].x)/2, 
-        enemy_rectangle[0].y + (my_rectangle[1].y - my_rectangle[0].y)/2, 
+        enemy_rectangle[0].x + (my_rectangle[1].x - my_rectangle[0].x)/1.5, 
+        enemy_rectangle[0].y + (my_rectangle[1].y - my_rectangle[0].y)/1.5, 
       )
     end
   end

@@ -2,9 +2,9 @@ require './vehicle'
 
 module Strategies
   class VehicleMap
-    UPDATED_FIELDS = [:id, :x, :y, :durability,
-      :remaining_attack_cooldown_ticks, :selected, :groups].freeze
-    ALL_FIELDS = [:player_id, :type] + UPDATED_FIELDS
+    UPDATED_FIELDS = [:x, :y, :durability, :groups].freeze
+    ALL_FIELDS = [:id, :remaining_attack_cooldown_ticks, :selected,
+      :player_id, :type] + UPDATED_FIELDS
 
     def initialize me, world
       @me = me
@@ -22,7 +22,11 @@ module Strategies
       world.vehicle_updates.each do |v|
         vehicle = @map[v.id]
         vehicle[:was_move] = vehicle[:x] != v.x || vehicle[:y] != v.y
-        UPDATED_FIELDS.each { |f| vehicle[f] = v.send(f) }
+        #UPDATED_FIELDS.each { |f| vehicle[f] = v.send(f) }
+        vehicle[:x] = v.x
+        vehicle[:y] = v.y
+        vehicle[:durability] = v.durability
+        vehicle[:groups] = v.groups
       end
     end
 

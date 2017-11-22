@@ -19,7 +19,7 @@ module Strategies::Actions
           get_move: ->(){
             @last_execution = @my_world.world.tick_index
             @last_selection = @my_world.world.tick_index if action[:name] == :select
-            apply_move(@my_world, action)
+            move = apply_move(@my_world, action)
           },
           can_move: ->(){
             can = true
@@ -62,9 +62,9 @@ module Strategies::Actions
           group: current[:act].()
         }
       when :scale
-        vc = @vehicles.position
+        vc = @vehicles
         pars = current[:act].(vc)
-        vc = pars[:point] || vc
+        vc = pars[:point] || vc.position
         if vc
           return {
             action: ActionType::SCALE,
@@ -87,6 +87,7 @@ module Strategies::Actions
         current[:act] && current[:act].()
         return {}
       end
+      #1/0
     end
 
     def was_vehicle_move?

@@ -7,6 +7,7 @@ require './initial_defence'
 require './action_state_type'
 require './const'
 require './initial'
+require './initial_v2'
 require './squad_builder'
 require './squad_type'
 require './my_world'
@@ -14,21 +15,26 @@ require './my_world'
 module Strategies
   class Index
     def call(me, world, game, move)
+      #return
+      #@time ||= 0
+      #start = Time.now
       @my_world ||= MyWorld.new(me, world)
       @my_world.reinitialize(me, world, game, move)
 
-      return if me.remaining_action_cooldown_ticks > 0
+      if me.remaining_action_cooldown_ticks == 0
+        action = continious_action ||
+          initial_actions
+        action.() if action
 
-      action = continious_action ||
-        initial_actions
-      action.() if action
-
-      was_move = @my_world.move_processor.run_delayed(move) ||
-        @my_world.move_processor.(move)
-#      if was_move
-#        ap world.tick_index
-#        ap move 
-#      end
+        was_move = @my_world.move_processor.(move)
+#        if was_move && move.action
+#          ap world.tick_index
+#          ap move
+#        end
+      end
+      #ellapsed = Time.now - start
+      #@time += ellapsed
+      #profile("#{world.tick_index} #{ellapsed} #{@time}")
     end
 
     private
@@ -56,15 +62,20 @@ module Strategies
     end
 
     def initial_actions
-      @initial_actions ||= Strategies::Initial.new(@my_world).get(
+      @initial_actions ||= Strategies::InitialV2.new(@my_world).get(
         ->() {
           init_continious_action }
       )
-      action = @initial_actions.first
-      if action && action.need_run?(@my_world)
-        @initial_actions.delete_at(0)
+      action = @initial_actions.find { |act| act.need_run?(@my_world)}
+      if action
+        @initial_actions.delete(action)
         action
       end
+    end
+
+    def profile msg = ''
+      #STDOUT.puts "#{Time.now} #{msg}"
+      #puts "#{Time.now} #{msg}"
     end
   end
 end

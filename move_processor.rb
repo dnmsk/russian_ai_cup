@@ -6,7 +6,7 @@ module Strategies
       @delayed_moves = []
       #@moves = [{ name: 'Any_move', moves:
         #[{ get_move: ->(){}, can_run: ->(){} }]
-      #@delayed_moves = [ {position: X, moves: [{ can_run: ->(){true/false}},}], ]
+      #@delayed_moves = [ {position: X, delayed_moves: [{ can_run: ->(){true/false}},}], ]
       #@continious = []
     end
 
@@ -14,19 +14,23 @@ module Strategies
       @moves.push(moves)
     end
 
-    def run_continious move
+    def call(move)
+      run_delayed(move) || run_current(move)
     end
 
-    def run_delayed move
+    private
+
+    def run_delayed(move)
       delayed_move = @delayed_moves.find do |d|
         d[:delayed_moves][:moves][d[:position]][:can_move].()
       end
       return false if delayed_move.nil?
       delayed_actions = delayed_move[:delayed_moves][:moves]
       action = delayed_actions[delayed_move[:position]]
-      if delayed_move[:last_selection] != @last_selection
+      if delayed_move[:delayed_moves][:last_selection] != @last_selection
         action_select = delayed_actions.find{ |a| a[:name] == :select }
-        return apply_to_move(move, action_select[:get_move].(), delayed_move) || true
+        apply_to_move(move, action_select[:get_move].(), delayed_move[:delayed_moves])
+        return true
       end
 
       delayed_move[:position] += 1
@@ -34,10 +38,11 @@ module Strategies
         @delayed_moves.delete(delayed_move)
         @my_world.ended_task.push(delayed_move[:delayed_moves][:name])
       end
-      return apply_to_move(move, action[:get_move].(), delayed_move) || true
+      apply_to_move(move, action[:get_move].(), delayed_move[:delayed_moves])
+      return true
     end
 
-    def call(move)
+    def run_current(move)
       if !@current_move
         if (@moves.empty?)
           return false
@@ -52,24 +57,23 @@ module Strategies
         @delayed_moves.push({ position: @move_position, delayed_moves: @current_move })
         @moves.delete(@current_move)
         @current_move = nil
-        return call(move)
+        return run_current(move)
       end
-
+      
+      apply_to_move(move, current_action[:get_move].(), @current_move)
       @move_position+=1
       if (@current_move[:moves].count <= @move_position)
         @moves.delete(@current_move)
         @my_world.ended_task.push(@current_move[:name])
         @current_move = nil
       end
-      return apply_to_move(move, current_action[:get_move].(), @current_move) || true
+      return true
     end
-
-    private
 
     def apply_to_move move, data, action
       return false if data.nil?
       data.each { |k, v| move.send("#{k}=".to_s, v) }
-
+#ap "apply_to_move #{action[:name]}"
       if move.action == ActionType::CLEAR_AND_SELECT
         @last_selection = action[:last_selection] = {
           group: move.group,
