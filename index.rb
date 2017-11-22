@@ -4,6 +4,7 @@ require './attack'
 require './attack_nuclear_strike'
 require './defence_nuclear_strike'
 require './initial_defence'
+require './fuck_them_all'
 require './action_state_type'
 require './const'
 require './initial'
@@ -18,7 +19,11 @@ module Strategies
       #return
       #@time ||= 0
       #start = Time.now
-      @my_world ||= MyWorld.new(me, world)
+      @fuck_them_all ||= Strategies::FuckThemAll.new
+      my_world = @fuck_them_all.(me, world, game, move)
+      return if my_world.nil?
+      @my_world ||= my_world
+      #@my_world ||= MyWorld.new(me, world)
       @my_world.reinitialize(me, world, game, move)
 
       if me.remaining_action_cooldown_ticks == 0
