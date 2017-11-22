@@ -4,7 +4,7 @@ require './vehicle'
 
 module Strategies
   class Squad
-    def initialize my_world, group, angle, squad_speed=0
+    def initialize my_world, group, angle, squad_speed
       @my_world, @group, @angle, @squad_speed = my_world, group, angle, squad_speed
     end
 
@@ -54,10 +54,10 @@ module Strategies
       @in_progress = true
       @call_id ||= 0
 
-      if (@call_id += 1) % 3 == 0
-        #actions.insert(1, { name: :rotate, act: ->() { Math::PI/2 } })
-        actions.insert(2, { name: :scale, act: ->(vehicles) { {factor: 0.1 } } })
-        actions.insert(2, { name: :scale, act: ->(vehicles) { {factor: 0.1 } }, delayed: :vehicle_stops })
+      if (@call_id += 1) % 2 == 0
+        actions.insert(1, { name: :rotate, act: ->() { Math::PI/4 } })
+        actions.insert(2, { name: :scale, act: ->(vehicles) { {factor: 0.1 } }, delayed: :ticks, sleep: 15 })
+        actions.insert(3, { name: :scale, act: ->(vehicles) { {factor: 0.1 } }, delayed: :vehicle_stops })
       end
 
       Strategies::Actions::Base.
@@ -76,11 +76,12 @@ module Strategies
       return nil if enemy_vehicles.empty? || mine.vehicles.empty?
       enemy_rectangle = Strategies::Vehicle.new(enemy_vehicles).rectangle
       enemy_position = Strategies::Vehicle.new(enemy_vehicles).position
+      return nil if enemy_rectangle.nil? || enemy_position.nil?
       my_rectangle = mine.rectangle
       my_position = mine.position
       Strategies::Point.new(
-        enemy_rectangle[0].x + (my_rectangle[1].x - my_rectangle[0].x)/1.5, 
-        enemy_rectangle[0].y + (my_rectangle[1].y - my_rectangle[0].y)/1.5, 
+        (enemy_rectangle[0].x + enemy_position.x)/2, 
+        (enemy_rectangle[0].y + enemy_position.y)/2, 
       )
     end
   end

@@ -7,13 +7,23 @@ module Strategies::Actions
     def call(params = {})
       enemies = enemies_by_distance
       enemy = enemies.first[1]
+
+      my_position = @squads[Strategies::SquadType::OLOLO_TROLOLO].vehicles.position
+      enemy_position = Strategies::Vehicle.new(enemy).position
+
+#ap my_position
+#ap enemies.map{|e| [e[0], e[1].count] }
       if attack?
-        @squads[Strategies::SquadType::AIR].attack_vehicles(enemy)
+        @squads[Strategies::SquadType::OLOLO_TROLOLO].attack_vehicles(enemy)
+        #@squads[Strategies::SquadType::FIGHTERS].attack_vehicles(enemy)
       else
-        @squads[Strategies::SquadType::AIR].
-          move_to_point(@squads[Strategies::SquadType::FIGHTERS].vehicles.position)
+        next_position = Strategies::Point.new(
+          (my_position.x+enemy_position.x)/2,
+          (my_position.y+enemy_position.y)/2
+        )
+        @squads[Strategies::SquadType::OLOLO_TROLOLO].move_to_point(next_position)
+        #@squads[Strategies::SquadType::FIGHTERS].move_to_point(next_position)
       end
-      @squads[Strategies::SquadType::FIGHTERS].attack_vehicles(enemy)
     end
 
     def need_run?(params = {})
@@ -24,9 +34,6 @@ module Strategies::Actions
 
     private
 
-    def air_follow_ground
-    end
-
     def attack?
       enemies = enemy_groups
       my_position = my_vehicles_position
@@ -35,7 +42,7 @@ module Strategies::Actions
       enemies_arr = enemies.
         sort{|e| Strategies::Point.distance_to_rect(e[0], my_position.x, my_position.y)}.
         first
-      Strategies::Point.distance_to_rect(enemies_arr[0], my_position.x, my_position.y) < 40
+      Strategies::Point.distance_to_rect(enemies_arr[0], my_position.x, my_position.y) < 50
     end
 
     def enemies_by_distance
@@ -46,7 +53,7 @@ module Strategies::Actions
     end
 
     def my_vehicles_position
-      @squads[Strategies::SquadType::FIGHTERS].vehicles.position
+      @squads[Strategies::SquadType::OLOLO_TROLOLO].vehicles.position
     end
 
     def enemy_groups
@@ -57,7 +64,7 @@ module Strategies::Actions
         found = false
         groups.each do |g|
           rectangle = g[:rectangle]
-          if point_class.distance_to_rect(rectangle, v[:x], v[:y]) < 20
+          if point_class.distance_to_rect(rectangle, v[:x], v[:y]) < 10
             found = true
             g[:vehicles].push(v)
             point_class.expand_rect(rectangle, v[:x], v[:y])

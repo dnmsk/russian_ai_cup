@@ -26,7 +26,7 @@ module Strategies::Actions
             return can if action[:delayed].nil?
             case action[:delayed]
             when :vehicle_stops
-              can = (@last_selection + 1 == @my_world.world.tick_index) || !was_vehicle_move?
+              can = (@last_selection + 1) == @my_world.world.tick_index || !was_vehicle_move?
             when :ticks
               can = (@my_world.world.tick_index - @last_execution) > (action[:sleep] || 50) 
             end

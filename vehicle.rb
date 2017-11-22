@@ -7,24 +7,24 @@ module Strategies
     end
 
     def rectangle
-      return nil if @vehicles.empty?
+      return nil if vehicles.empty?
       point = Strategies::Point
       [
-        point.new(@vehicles.map{|v| v[:x]}.min, @vehicles.map{|v| v[:y]}.min),
-        point.new(@vehicles.map{|v| v[:x]}.max, @vehicles.map{|v| v[:y]}.max)
+        point.new(vehicles.map{|v| v[:x]}.min, vehicles.map{|v| v[:y]}.min),
+        point.new(vehicles.map{|v| v[:x]}.max, vehicles.map{|v| v[:y]}.max)
       ]
     end
 
     def position
-      return nil if @vehicles.empty?
+      return nil if vehicles.empty?
       Strategies::Point.new(
-        avg(@vehicles.map { |v| v[:x] }),
-        avg(@vehicles.map { |v| v[:y] })
+        avg(vehicles.map { |v| v[:x] }),
+        avg(vehicles.map { |v| v[:y] })
       )
     end
 
     def vehicles
-      @vehicles
+      @vehicles.select{ |v| v[:durability] > 0 }
     end
 
     def health

@@ -53,11 +53,13 @@ module Strategies
       
       current_action = @current_move[:moves][@move_position]
  
-      if current_action[:can_move] && !current_action[:can_move].()
+      if current_action[:can_move] && !current_action[:can_move].() ||
+        @current_move[:last_selection] != @last_selection &&
+          current_action[:name] != :select && @move_position > 0
         @delayed_moves.push({ position: @move_position, delayed_moves: @current_move })
         @moves.delete(@current_move)
         @current_move = nil
-        return run_current(move)
+        return call(move)
       end
       
       apply_to_move(move, current_action[:get_move].(), @current_move)

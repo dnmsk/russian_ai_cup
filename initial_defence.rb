@@ -14,7 +14,7 @@ module Strategies::Actions
 
     def initialize my_world, group
       @my_world = my_world
-      @squad = Strategies::Squad.new(@my_world, group, 0)
+      @squad = Strategies::Squad.new(@my_world, group, 0, 0)
       @check_index = 0
     end
 

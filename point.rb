@@ -26,7 +26,7 @@ module Strategies
 
     def self.distance_to_rect rectangle, x, y
       lu, dr = rectangle[0], rectangle[1]
-      if lu.x<x && dr.x>x && lu.y<y && dr.y>y
+      if lu.x>=x && dr.x>=x && lu.y>=y && dr.y>=y
         return 0
       end
       if lu.x>=x
