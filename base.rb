@@ -17,7 +17,7 @@ module Strategies::Actions
         {
           name: action[:name],
           get_move: ->(){
-            @last_execution = @my_world.world.tick_index
+            @last_execution = @my_world.world.tick_index if action[:name] != :select
             @last_selection = @my_world.world.tick_index if action[:name] == :select
             move = apply_move(@my_world, action)
           },
@@ -28,13 +28,19 @@ module Strategies::Actions
             when :vehicle_stops
               can = (@last_selection + 1) == @my_world.world.tick_index || !was_vehicle_move?
             when :ticks
-              can = (@my_world.world.tick_index - @last_execution) > (action[:sleep] || 50) 
+              can = (@my_world.world.tick_index - @last_execution) > (action[:sleep] || 50)
+            when :wait
+              can = action[:can_move].()
             end
             can
           }
         }
       end
-      @my_world.move_processor.add_move({ name: @name, moves: prepared })
+      if @params[:blocking_action]
+        @my_world.move_processor.add_blocking_move({ name: @name, moves: prepared })
+      else
+        @my_world.move_processor.add_move({ name: @name, moves: prepared })
+      end
     end
 
     def need_run?(my_world, pars = {})

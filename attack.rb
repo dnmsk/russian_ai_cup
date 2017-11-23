@@ -64,7 +64,7 @@ module Strategies::Actions
         found = false
         groups.each do |g|
           rectangle = g[:rectangle]
-          if point_class.distance_to_rect(rectangle, v[:x], v[:y]) < 10
+          if point_class.distance_to_rect(rectangle, v[:x], v[:y]) < 20
             found = true
             g[:vehicles].push(v)
             point_class.expand_rect(rectangle, v[:x], v[:y])

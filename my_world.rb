@@ -59,7 +59,6 @@ module Strategies
       @actions
     end
 
-
 #      {
 #        action: nil,
 #        group: 0,

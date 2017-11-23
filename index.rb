@@ -19,11 +19,13 @@ module Strategies
       #return
       #@time ||= 0
       #start = Time.now
-      @fuck_them_all ||= Strategies::FuckThemAll.new
-      my_world = @fuck_them_all.(me, world, game, move)
-      return if my_world.nil?
-      @my_world ||= my_world
-      #@my_world ||= MyWorld.new(me, world)
+      
+      #@fuck_them_all ||= Strategies::FuckThemAll.new
+      #my_world = @fuck_them_all.(me, world, game, move)
+      #return if my_world.nil?
+      #@my_world ||= my_world
+      
+      @my_world ||= MyWorld.new(me, world)
       @my_world.reinitialize(me, world, game, move)
 
       if me.remaining_action_cooldown_ticks == 0
@@ -49,8 +51,8 @@ module Strategies
         Strategies::Actions::DefenceNuclearStrike.new(@my_world),
         #Strategies::Actions::AttackNuclearStrike.new(my_world),
         #Strategies::Actions::InitialDefence.new(my_world, Strategies::SquadType::AIR),
-        Strategies::Actions::InitialDefence.new(@my_world, Strategies::SquadType::FIGHTER),
-        Strategies::Actions::InitialDefence.new(@my_world, Strategies::SquadType::HELICOPTER),
+        #Strategies::Actions::InitialDefence.new(@my_world, Strategies::SquadType::FIGHTER),
+        #Strategies::Actions::InitialDefence.new(@my_world, Strategies::SquadType::HELICOPTER),
         #Strategies::Actions::InitialDefence.new(my_world, Strategies::SquadType::AIR),
       ]
 
@@ -68,8 +70,11 @@ module Strategies
 
     def initial_actions
       @initial_actions ||= Strategies::InitialV2.new(@my_world).get(
+        ->() { init_continious_action },
         ->() {
-          init_continious_action }
+            @continious_action.push(
+              Strategies::Actions::InitialDefence.new(@my_world, Strategies::SquadType::AIR))
+          },
       )
       action = @initial_actions.find { |act| act.need_run?(@my_world)}
       if action

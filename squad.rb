@@ -15,7 +15,9 @@ module Strategies
     def move_to_point point, mine_vehicles=nil
       actions = [
         { name: :select, act: ->(rectangle) { nil } },
-        { name: :move, act: ->(p) { @in_progress = false; point }, speed: @squad_speed },
+        { name: :move, act: ->(p) { to_point(p, point) }, speed: @squad_speed },
+        { name: :scale, act: ->(point) { {factor: 0.1} }, delayed: :vehicle_stops},
+        { name: :empty, act: ->() { @in_progress = false }, delayed: :vehicle_stops }
       ]
       execute_strategy(actions, mine_vehicles)
     end
@@ -30,9 +32,10 @@ module Strategies
       actions = [
         { name: :select, act: ->(rectangle) { nil } },
         { name: :move, act: ->(p) {
-          @in_progress = false;
-          enemy_point(my_vehicles, vehicles) || p
+          to_point(p, enemy_point(my_vehicles, vehicles) || p)
         }, speed: @squad_speed},
+        { name: :scale, act: ->(point) { {factor: 0.1} }, delayed: :vehicle_stops},
+        { name: :empty, act: ->() { @in_progress = false }, delayed: :vehicle_stops }
       ]
       execute_strategy(actions, mine_vehicles)
     end
@@ -47,6 +50,13 @@ module Strategies
 
     private
 
+    def to_point my_position, point
+      k = 30/my_position.distance_to(point.x, point.y)
+      p = Strategies::Point.new(
+        my_position.x + k * (point.x - my_position.x),
+        my_position.y + k * (point.y - my_position.y))
+    end
+
     def execute_strategy actions, mine_vehicles
       mine_vehicles = mine_vehicles || my_vehicles
       @last_tick = @my_world.world.tick_index
@@ -54,14 +64,14 @@ module Strategies
       @in_progress = true
       @call_id ||= 0
 
-      if (@call_id += 1) % 2 == 0
-        actions.insert(1, { name: :rotate, act: ->() { Math::PI/4 } })
-        actions.insert(2, { name: :scale, act: ->(vehicles) { {factor: 0.1 } }, delayed: :ticks, sleep: 15 })
-        actions.insert(3, { name: :scale, act: ->(vehicles) { {factor: 0.1 } }, delayed: :vehicle_stops })
-      end
+      #if (@call_id += 1) % 2 == 0
+      #  actions.insert(1, { name: :rotate, act: ->() { Math::PI/4 } })
+      #  actions.insert(2, { name: :scale, act: ->(vehicles) { {factor: 0.1 } }, delayed: :ticks, sleep: 15 })
+      #  actions.insert(3, { name: :scale, act: ->(vehicles) { {factor: 0.1 } }, delayed: :vehicle_stops })
+      #end
 
       Strategies::Actions::Base.
-        new(@my_world, "SquadMove_#{@group}", actions, {group: @group}).()
+        new(@my_world, "SquadMove_#{@group}", actions, {group: @group}, false).()
     end
 
     def my_vehicles

@@ -3,6 +3,7 @@ module Strategies
     def initialize my_world
       @my_world = my_world
       @moves = []
+      @blocking_moves = []
       @delayed_moves = []
       #@moves = [{ name: 'Any_move', moves:
         #[{ get_move: ->(){}, can_run: ->(){} }]
@@ -10,15 +11,44 @@ module Strategies
       #@continious = []
     end
 
+    def add_blocking_move moves
+      @blocking_moves.push(moves)
+    end
+
     def add_move moves
       @moves.push(moves)
     end
 
     def call(move)
-      run_delayed(move) || run_current(move)
+      run_blocking(move) || run_delayed(move) || run_current(move)
     end
 
     private
+
+    def run_blocking(move)
+      if !@current_blocking_move
+        if (@blocking_moves.empty?)
+          return false
+        end
+        @current_blocking_move = @blocking_moves.first
+        @blocking_move_position = 0
+      end
+      
+      current_action = @current_blocking_move[:moves][@blocking_move_position]
+ 
+      if current_action[:can_move] && !current_action[:can_move].()
+        return true
+      end
+      
+      apply_to_move(move, current_action[:get_move].(), @current_blocking_move)
+      @blocking_move_position+=1
+      if (@current_blocking_move[:moves].count <= @blocking_move_position)
+        @blocking_moves.delete(@current_blocking_move)
+        @my_world.ended_task.push(@current_blocking_move[:name])
+        @current_blocking_move = nil
+      end
+      return true
+    end
 
     def run_delayed(move)
       delayed_move = @delayed_moves.find do |d|

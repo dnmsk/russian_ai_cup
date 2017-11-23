@@ -7,8 +7,11 @@ module Strategies
     FIGHTERS_1 = 81
     FIGHTERS_2 = 82
 
-    AIR = 71
     GROUD = 70
+
+    AIR = 71
+    AIR_1 = 72
+    AIR_2 = 73
 
     SCOUT = 90
 

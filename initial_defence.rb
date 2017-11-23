@@ -2,7 +2,7 @@ require './squad'
 
 module Strategies::Actions
   class InitialDefence
-    RANGE_FOR_DEFENCE = 550
+    RANGE_FOR_DEFENCE = 400
 
     PRIORITIES = {
       VehicleType::FIGHTER => 1,
@@ -14,7 +14,7 @@ module Strategies::Actions
 
     def initialize my_world, group
       @my_world = my_world
-      @squad = Strategies::Squad.new(@my_world, group, 0, 0)
+      @squad = Strategies::Squad.new(@my_world, group, 0, 0.9)
       @check_index = 0
     end
 

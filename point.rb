@@ -24,6 +24,10 @@ module Strategies
       Math.sqrt((@x-x)**2 + (@y-y)**2)
     end
 
+    def in_reactangle? rectangle
+      self.class.distance_to_rect(rectangle, @x, @y) == 0
+    end
+
     def self.distance_to_rect rectangle, x, y
       lu, dr = rectangle[0], rectangle[1]
       if lu.x>=x && dr.x>=x && lu.y>=y && dr.y>=y
