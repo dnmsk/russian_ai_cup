@@ -4,22 +4,23 @@ require './vehicle'
 
 module Strategies
   class Squad
-    def initialize my_world, group, angle, squad_speed
-      @my_world, @group, @angle, @squad_speed = my_world, group, angle, squad_speed
+    def initialize my_world, group, angle, squad_speed, distance_limit = 30
+      @my_world, @group, @angle, @squad_speed, @distance_limit =
+        my_world, group, angle, squad_speed, distance_limit
     end
 
     def group
       @group
     end
 
-    def move_to_point point, mine_vehicles=nil
+    def move_to_point point, on_complete=nil
       actions = [
         { name: :select, act: ->(rectangle) { nil } },
-        { name: :move, act: ->(p) { to_point(p, point) }, speed: @squad_speed },
-        { name: :scale, act: ->(point) { {factor: 0.1} }, delayed: :vehicle_stops},
-        { name: :empty, act: ->() { @in_progress = false }, delayed: :vehicle_stops }
+        { name: :scale, act: ->(point) { {factor: 0.1} }},
+        { name: :move, act: ->(p) { to_point(p, point) }, speed: @squad_speed, delayed: :vehicle_stops },
+        { name: :empty, act: ->() { @in_progress = false; on_complete && on_complete.() }, delayed: :vehicle_stops }
       ]
-      execute_strategy(actions, mine_vehicles)
+      execute_strategy(actions, my_vehicles)
     end
 
     def attack_vehicles vehicles
@@ -31,10 +32,10 @@ module Strategies
 
       actions = [
         { name: :select, act: ->(rectangle) { nil } },
+        { name: :scale, act: ->(point) { {factor: 0.1} }},
         { name: :move, act: ->(p) {
           to_point(p, enemy_point(my_vehicles, vehicles) || p)
-        }, speed: @squad_speed},
-        { name: :scale, act: ->(point) { {factor: 0.1} }, delayed: :vehicle_stops},
+        }, speed: @squad_speed, delayed: :vehicle_stops},
         { name: :empty, act: ->() { @in_progress = false }, delayed: :vehicle_stops }
       ]
       execute_strategy(actions, mine_vehicles)
@@ -51,10 +52,7 @@ module Strategies
     private
 
     def to_point my_position, point
-      k = 30/my_position.distance_to(point.x, point.y)
-      p = Strategies::Point.new(
-        my_position.x + k * (point.x - my_position.x),
-        my_position.y + k * (point.y - my_position.y))
+      Strategies::Point.to_point_with_limit(my_position, point, @distance_limit)
     end
 
     def execute_strategy actions, mine_vehicles

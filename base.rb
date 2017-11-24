@@ -70,13 +70,13 @@ module Strategies::Actions
       when :scale
         vc = @vehicles
         pars = current[:act].(vc)
-        vc = pars[:point] || vc.position
+        vc_position = pars[:point] || vc.position
         if vc
           return {
             action: ActionType::SCALE,
             factor: pars[:factor],
-            x: vc.x,
-            y: vc.y
+            x: vc_position.x,
+            y: vc_position.y
           }
         end
       when :rotate
@@ -89,6 +89,8 @@ module Strategies::Actions
             y: vc.y
           }
         end
+      when :nuclear
+        return (current[:act].()).merge({ action: ActionType::TACTICAL_NUCLEAR_STRIKE })
       when :empty
         current[:act] && current[:act].()
         return {}

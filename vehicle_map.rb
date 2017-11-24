@@ -6,20 +6,19 @@ module Strategies
     ALL_FIELDS = [:id, :remaining_attack_cooldown_ticks, :selected,
       :player_id, :type] + UPDATED_FIELDS
 
-    def initialize me, world
-      @me = me
+    def initialize me, my_world
+      @me, @my_world = me, my_world
       @map = [{}]
-      world.new_vehicles.each do |v|
+      my_world.world.new_vehicles.each do |v|
         @map[v.id] = ALL_FIELDS.each_with_object(Hash.new) do |key, memo|
           memo[key] = v.send(key)
         end
       end
     end
 
-    def read_updates world
-      @world = world
+    def read_updates
       @map.each { |v| v && v[:was_move] = false }
-      world.vehicle_updates.each do |v|
+      @my_world.world.vehicle_updates.each do |v|
         vehicle = @map[v.id]
         vehicle[:was_move] = vehicle[:x] != v.x || vehicle[:y] != v.y
         #UPDATED_FIELDS.each { |f| vehicle[f] = v.send(f) }
@@ -41,10 +40,11 @@ module Strategies
       )
     end
 
-    def enemy_vehicle type = nil, group = nil
-      Strategies::Vehicle.new(filter_by_type_group(
-        all_vehicles.select { |v| v && v[:player_id] && v[:player_id] != @me.id },
-        type, group)
+    def enemy_vehicle
+      return @enemy_vehicle if @my_world.world.tick_index == @tick_last_scan
+      @tick_last_scan = @my_world.world.tick_index
+      @enemy_vehicle = Strategies::Vehicle.new(filter_by_type_group(
+        all_vehicles.select { |v| v && v[:player_id] && v[:player_id] != @me.id })
       )
     end
 
@@ -70,7 +70,7 @@ module Strategies
       @map.select{|v| v && v[:durability] && v[:durability] > 0}
     end
 
-    def filter_by_type_group vs, type, group
+    def filter_by_type_group vs, type = nil, group = nil
       vs = vs.select{ |v| v[:type] == type } if type
       vs = vs.select{ |v| v[:groups].include? group } if group
       vs

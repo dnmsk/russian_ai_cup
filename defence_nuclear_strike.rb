@@ -15,10 +15,6 @@ module Strategies::Actions
       return if @in_progress
       @in_progress = true
 
-#      ap "DefenceNuclearStrike"
-#      ap my_position
-#      ap strike_point
-
       move_at_index = nil
       move_length = nil
       back_move_index = nil
@@ -27,7 +23,7 @@ module Strategies::Actions
         { name: :scale, act: ->(p) {
           move_at_index = @my_world.world.tick_index
 #          move_length = 40
-          move_length = @my_world.world.opponent_player.remaining_action_cooldown_ticks
+          move_length = @my_world.world.opponent_player.next_nuclear_strike_tick_index
           { factor: 10, point: strike_point }
         }},
         { name: :scale, act: ->(p) {
@@ -35,7 +31,7 @@ module Strategies::Actions
         }, delayed: :wait, can_move: ->() {
             back_move_index = @my_world.world.tick_index
 #            move_at_index + move_length < @my_world.world.tick_index
-            @my_world.world.opponent_player.remaining_action_cooldown_ticks <= 0
+            @my_world.world.opponent_player.next_nuclear_strike_tick_index <= 0
         }},
         { name: :empty, delayed: :wait, can_move: ->() {
             @my_world.world.tick_index > back_move_index + move_length
@@ -49,9 +45,13 @@ module Strategies::Actions
     end
 
     def need_run?(params = {})
-      @call_id ||= 0
-      return true if (@call_id += 1) % 800 == 0 && @my_world.ended_task.include?(:initial_complete)
-      !@in_progress && @my_world.world.opponent_player.remaining_action_cooldown_ticks > 0
+      #@call_id ||= 0
+      #return true if (@call_id += 1) % 800 == 0 && @my_world.ended_task.include?(:initial_complete)
+      !@in_progress &&
+        @my_world.world.opponent_player.next_nuclear_strike_tick_index > 0 &&
+        @my_world.world.opponent_player.next_nuclear_strike_x > 0 &&
+        @my_world.world.opponent_player.next_nuclear_strike_y > 0
+
     end
   end
 end

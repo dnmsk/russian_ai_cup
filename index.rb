@@ -1,6 +1,7 @@
 #require 'awesome_print'
 require './base'
 require './attack'
+require './attack'
 require './attack_nuclear_strike'
 require './defence_nuclear_strike'
 require './initial_defence'
@@ -24,7 +25,6 @@ module Strategies
       #my_world = @fuck_them_all.(me, world, game, move)
       #return if my_world.nil?
       #@my_world ||= my_world
-      
       @my_world ||= MyWorld.new(me, world)
       @my_world.reinitialize(me, world, game, move)
 
@@ -49,6 +49,7 @@ module Strategies
     def continious_action
       @continious_action ||= [
         Strategies::Actions::DefenceNuclearStrike.new(@my_world),
+
         #Strategies::Actions::AttackNuclearStrike.new(my_world),
         #Strategies::Actions::InitialDefence.new(my_world, Strategies::SquadType::AIR),
         #Strategies::Actions::InitialDefence.new(@my_world, Strategies::SquadType::FIGHTER),
@@ -59,13 +60,16 @@ module Strategies
       @continious_action.find { |v| v.need_run?(@my_world) }
     end
 
-    def init_continious_action 
+    def init_continious_action
       squads = Strategies::SquadBuilder.new.get(@my_world)
       [
-        #Strategies::Actions::AttackNuclearStrike,
-        #Strategies::Actions::DefenceNuclearStrike,
         Strategies::Actions::Attack,
       ].each {|s| @continious_action.push(s.new(@my_world, squads))}
+
+      squads.each do |(k, squad)|
+        @continious_action.push(
+          Strategies::AttackNuclearStrike.new(@my_world, squad))
+      end
     end
 
     def initial_actions

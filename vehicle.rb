@@ -31,19 +31,15 @@ module Strategies
       avg(live.map{ |v| v[:durability]})
     end
 
-    def live
-      @vehicles.select { |v| v[:durability] > 0 }
-    end
-
     private
 
     def avg(array)
-      return 0 if array.empty?
+      return nil if array.empty?
       sum(array) / array.count
     end
 
     def sum(array)
-      return 0 if array.empty?
+      return nil if array.empty?
       array.inject(0) { |sum, x| sum + x }
     end
   end

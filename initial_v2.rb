@@ -168,8 +168,8 @@ module Strategies
 
         Strategies::Actions::Base.new(@my_world, :rotate, [
           { name: :select, act: ->(rectangle) { nil }},
-          { name: :rotate, act: ->() { -Math::PI/4 }, delayed: :vehicle_stops},
           { name: :scale, act: ->(point) { {factor: 0.1} }, delayed: :vehicle_stops},
+          { name: :rotate, act: ->() { -Math::PI/4 }, delayed: :vehicle_stops},
         ], group: Strategies::SquadType::FIGHTERS, after: [:compacting_move_1, :compacting_move_2]),
 
       ] +

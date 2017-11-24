@@ -4,9 +4,23 @@ require './vehicle_map'
 
 module Strategies
   class MyWorld
+    WEATHER_FACTOR = {
+      WeatherType::CLEAR => { speed: 1, view: 1, stealth: 1 }, 
+      WeatherType::CLOUD => { speed: 0.8, view: 0.8, stealth: 0.8 }, 
+      WeatherType::RAIN => { speed: 0.6, view: 0.6, stealth: 0.6 }, 
+    }.freeze
+    TERRAIN_FACTOR = {
+      TerrainType::PLAIN => { speed: 1, view: 1, stealth: 1 },
+      TerrainType::SWAMP => { speed: 0.6, view: 1, stealth: 1 },
+      TerrainType::FOREST => { speed: 0.8, view: 0.8, stealth: 0.6 },
+    }.freeze
+
     def initialize me, world
       @me = me
-      @vehicle_map = VehicleMap.new(me, world)
+      @world = world
+      @weather = world.terrain_by_cell_x_y
+      @terrain = world.weather_by_cell_x_y
+      @vehicle_map = VehicleMap.new(me, self)
       @ended_task = []
       @actions = []
       @move_processor = Strategies::MoveProcessor.new(self)
@@ -15,7 +29,7 @@ module Strategies
     def reinitialize me, world, game, move
       @me, @world, @game, @move = me, world, game, move
 
-      @vehicle_map.read_updates(world)
+      @vehicle_map.read_updates
     end
 
     def vehicle_map
@@ -55,10 +69,25 @@ module Strategies
       @actions.push(action_base)
     end
 
+    def k_for_weather x, y, type
+      WEATHER_FACTOR[@weather[(x/32).to_i][(y/32).to_i]][type]
+    end
+
+    def k_for_terrain x, y, type
+      TERRAIN_FACTOR[@weather[(x/32).to_i][(y/32).to_i]][type]
+    end
+
     def actions
       @actions
     end
 
+    def build_factor(speed, view, stealth)
+      {
+        speed: speed,
+        view: view,
+        stealth: stealth
+      }
+  end
 #      {
 #        action: nil,
 #        group: 0,
