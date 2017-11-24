@@ -35,11 +35,10 @@ module Strategies
       end
       
       current_action = @current_blocking_move[:moves][@blocking_move_position]
- 
+      
       if current_action[:can_move] && !current_action[:can_move].()
         return true
       end
-      
       apply_to_move(move, current_action[:get_move].(), @current_blocking_move)
       @blocking_move_position+=1
       if (@current_blocking_move[:moves].count <= @blocking_move_position)

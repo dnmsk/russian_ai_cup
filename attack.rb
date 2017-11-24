@@ -9,19 +9,14 @@ module Strategies::Actions
     def call(params = {})
       my_position = @squads[Strategies::SquadType::OLOLO_TROLOLO].vehicles.position
       enemies = enemies_by_distance my_position
-      enemy = enemies.first[1]
-      enemy_position = Strategies::Vehicle.new(enemy).position
+      enemy = Strategies::Vehicle.new(enemies.first[1])
+      enemy_position = enemy.position
 
-      if attack?
-        @squads[Strategies::SquadType::OLOLO_TROLOLO].attack_vehicles(enemy)
+      if enemy.durability_changed?
+        return nil
         #@squads[Strategies::SquadType::FIGHTERS].attack_vehicles(enemy)
       else
-        next_position = Strategies::Point.new(
-          (my_position.x+enemy_position.x)/2,
-          (my_position.y+enemy_position.y)/2
-        )
-        @squads[Strategies::SquadType::OLOLO_TROLOLO].move_to_point(next_position)
-        #@squads[Strategies::SquadType::FIGHTERS].move_to_point(next_position)
+        @squads[Strategies::SquadType::OLOLO_TROLOLO].move_to_point(enemy_position)
       end
     end
 
@@ -32,12 +27,6 @@ module Strategies::Actions
     end
 
     private
-
-    def attack?
-      my_position = @squads[Strategies::SquadType::OLOLO_TROLOLO].vehicles.position
-      enemies_arr = enemies_by_distance(my_vehicles_position).first
-      Strategies::Point.distance_to_rect(enemies_arr[0], my_position.x, my_position.y) < 50
-    end
 
     def my_vehicles_position
       @squads[Strategies::SquadType::OLOLO_TROLOLO].vehicles.position

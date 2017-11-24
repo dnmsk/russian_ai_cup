@@ -31,6 +31,10 @@ module Strategies
       avg(live.map{ |v| v[:durability]})
     end
 
+    def durability_changed?
+      vehicles.any?{ |v| v[:durability_changed]}
+    end
+
     private
 
     def avg(array)

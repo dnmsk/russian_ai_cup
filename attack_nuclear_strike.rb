@@ -15,15 +15,14 @@ module Strategies
     end
 
     def call params = {}
-      my_vehicles = Strategies::Vehicle.new(
-        @squad.vehicles.vehicles.select{ |v| v[:type] == best_type_in_squad })
-      enemy_group = best_enemy_group_for_squad my_vehicles
+      enemy_group = best_enemy_group_for_squad @squad.vehicles
 
       if enemy_group.nil?
         return
       end
 
-      targeting = unit_and_point my_vehicles, enemy_group 
+      targeting = unit_and_point @squad.vehicles, enemy_group
+      return if targeting.nil?
       actions = [
         { name: :nuclear, act: -> {
           {
@@ -42,7 +41,7 @@ module Strategies
 
     def need_run? params = {}
       @call_id ||= 0
-      (@call_id += 1) % 20 == 0 &&
+      (@call_id += 1) % 35 == 0 &&
         @my_world.world.my_player.remaining_nuclear_strike_cooldown_ticks <= 0 &&
         @my_world.world.my_player.next_nuclear_strike_tick_index <= 0
     end
@@ -50,19 +49,31 @@ module Strategies
     private
 
     def unit_and_point my_vehicles, enemy_group
-      enemy_position = Strategies::Vehicle.new(enemy_group[1]).position
+      enemies = Strategies::Vehicle.new(enemy_group[1])
+      enemy_position = enemies.position
       my_vehicles = my_vehicles.vehicles.sort_by do |v|
-        enemy_position.distance_to(v[:x], v[:y]) * @my_world.k_for_weather(v[:x], v[:y], :view)
+        enemy_position.distance_to(v[:x], v[:y]) *
+          @my_world.k_for_weather(v[:x], v[:y], :view)
       end
-      [my_vehicles.first, enemy_position]
+      my_vehicle = my_vehicles.first
+      my_point = Strategies::Point.new(my_vehicle[:x], my_vehicle[:y])
+      strike_point = Strategies::Point.to_point_with_limit(my_point, enemy_position, 
+          view_range(my_vehicle[:type]) * @my_world.k_for_weather(my_point.x, my_point.y, :view) - 1)
+      if strike_point.in_reactangle?(enemies.rectangle)
+        return [
+          my_vehicle,
+          strike_point
+        ]
+      end
+      nil
     end
 
     def best_enemy_group_for_squad vehicles
       my_position = vehicles.position
-
       enemy = enemies_by_distance(my_position).select{|e| e[1].count > 25}.first
+      return nil if enemy.nil?
       if Strategies::Point.distance_to_rect(enemy[0], my_position.x, my_position.y) >
-        @my_world.game.tactical_nuclear_strike_radius / 2
+        @my_world.game.tactical_nuclear_strike_radius * 5
         return nil
       end
       enemy
@@ -74,9 +85,8 @@ module Strategies
       end
     end
 
-    def view_range
-      @view_range ||= @my_world.game.
-        send(TYPES_TO_FIELD_MAP[@squad.vehicles.vehicles.first[:type]])-1
+    def view_range type
+      @view_range ||= @my_world.game.send(TYPES_TO_FIELD_MAP[type])-1
     end
   end
 end

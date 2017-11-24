@@ -17,10 +17,13 @@ module Strategies
     end
 
     def read_updates
-      @map.each { |v| v && v[:was_move] = false }
+      @map.each do |v|
+        v && v[:was_move] = false && vehicle[:durability_changed] = false
+      end
       @my_world.world.vehicle_updates.each do |v|
         vehicle = @map[v.id]
         vehicle[:was_move] = vehicle[:x] != v.x || vehicle[:y] != v.y
+        vehicle[:durability_changed] = vehicle[:durability] > v.durability
         #UPDATED_FIELDS.each { |f| vehicle[f] = v.send(f) }
         vehicle[:x] = v.x
         vehicle[:y] = v.y
